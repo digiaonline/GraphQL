@@ -9,6 +9,7 @@
 namespace Youshido\Tests\Performance;
 
 
+use Youshido\GraphQL\Execution\Context\ExecutionContext;
 use Youshido\GraphQL\Execution\Processor;
 use Youshido\GraphQL\Schema\Schema;
 use Youshido\GraphQL\Type\ListType\ListType;
@@ -19,7 +20,6 @@ use Youshido\GraphQL\Type\Scalar\StringType;
 
 class NPlusOneTest extends \PHPUnit_Framework_TestCase
 {
-
     private function getDataForPosts()
     {
         /**
@@ -36,7 +36,7 @@ class NPlusOneTest extends \PHPUnit_Framework_TestCase
             $posts[] = [
                 'id'     => $i + 1,
                 'title'  => sprintf('Post title $%s', $i),
-                'author' => $authors[$i % 3]
+                'author' => $authors[$i % 3],
             ];
         }
 
@@ -50,7 +50,7 @@ class NPlusOneTest extends \PHPUnit_Framework_TestCase
             'fields' => [
                 'id'   => new IdType(),
                 'name' => new StringType(),
-            ]
+            ],
         ]);
 
         $postType = new ObjectType([
@@ -59,24 +59,23 @@ class NPlusOneTest extends \PHPUnit_Framework_TestCase
                 'id'     => new IntType(),
                 'title'  => new StringType(),
                 'author' => $authorType,
-            ]
+            ],
         ]);
 
-        $processor = new Processor(new Schema([
+        $processor = new Processor(new ExecutionContext(new Schema([
             'query' => new ObjectType([
                 'fields' => [
                     'posts' => [
                         'type'    => new ListType($postType),
                         'resolve' => function ($source, $args, $info) {
                             return $this->getDataForPosts();
-                        }
-                    ]
-                ]
-            ])
-        ]));
+                        },
+                    ],
+                ],
+            ]),
+        ])));
 
         $data = $processor->processPayload('{ posts { id, title, author { id, name } } }')->getResponseData();
         $this->assertNotEmpty($data['data']['posts'][0]['author']);
     }
-
 }

@@ -11,6 +11,7 @@ namespace Youshido\GraphQL\Execution;
 use Youshido\GraphQL\Exception\ResolveException;
 use Youshido\GraphQL\Execution\Container\Container;
 use Youshido\GraphQL\Execution\Context\ExecutionContext;
+use Youshido\GraphQL\Execution\Context\ExecutionContextInterface;
 use Youshido\GraphQL\Execution\Visitor\MaxComplexityQueryVisitor;
 use Youshido\GraphQL\Field\Field;
 use Youshido\GraphQL\Field\FieldInterface;
@@ -42,7 +43,6 @@ use Youshido\GraphQL\Validator\ResolveValidator\ResolveValidatorInterface;
 
 class Processor
 {
-
     const TYPE_NAME_QUERY = '__typename';
 
     /** @var ExecutionContext */
@@ -57,13 +57,9 @@ class Processor
     /** @var int */
     protected $maxComplexity;
 
-    public function __construct(AbstractSchema $schema)
+    public function __construct(ExecutionContextInterface $executionContext)
     {
-        if (empty($this->executionContext)) {
-            $this->executionContext = new ExecutionContext($schema);
-            $this->executionContext->setContainer(new Container());
-        }
-
+        $this->executionContext = $executionContext;
         $this->resolveValidator = new ResolveValidator($this->executionContext);
     }
 
@@ -101,7 +97,7 @@ class Processor
         $type   = $query instanceof AstMutation ? $schema->getMutationType() : $schema->getQueryType();
         $field  = new Field([
             'name' => $query instanceof AstMutation ? 'mutation' : 'query',
-            'type' => $type
+            'type' => $type,
         ]);
 
         if (self::TYPE_NAME_QUERY == $query->getName()) {
@@ -302,6 +298,7 @@ class Processor
      * @param AbstractObjectType $type
      * @param AstFieldInterface  $ast
      * @param                    $resolvedValue
+     *
      * @return array
      */
     private function collectResult(FieldInterface $field, AbstractObjectType $type, $ast, $resolvedValue)
@@ -342,7 +339,6 @@ class Processor
 
                                 break;
                             }
-
                         }
 
                         continue;
@@ -452,7 +448,7 @@ class Processor
 
         /** @var AbstractUnionType $type */
         $type         = $field->getType()->getNullableType();
-        $resolveInfo = new ResolveInfo(
+        $resolveInfo  = new ResolveInfo(
             $field,
             $ast instanceof AstQuery ? $ast->getFields() : [],
             $this->executionContext
@@ -537,7 +533,6 @@ class Processor
         return new ResolveInfo($field, $astFields, $this->executionContext);
     }
 
-
     /**
      * You can access ExecutionContext to check errors and inject dependencies
      *
@@ -578,5 +573,4 @@ class Processor
     {
         $this->maxComplexity = $maxComplexity;
     }
-
 }

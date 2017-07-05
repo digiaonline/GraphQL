@@ -9,6 +9,7 @@
 namespace Youshido\Tests\Schema;
 
 
+use Youshido\GraphQL\Execution\Context\ExecutionContext;
 use Youshido\GraphQL\Execution\Processor;
 use Youshido\GraphQL\Schema\Schema;
 use Youshido\GraphQL\Type\NonNullType;
@@ -21,7 +22,6 @@ use Youshido\Tests\DataProvider\TestSchema;
 
 class SchemaTest extends \PHPUnit_Framework_TestCase
 {
-
     public function testStandaloneEmptySchema()
     {
         $schema = new TestEmptySchema();
@@ -39,7 +39,6 @@ class SchemaTest extends \PHPUnit_Framework_TestCase
         $schema->addMutationField('changeUser', ['type' => new TestObjectType(), 'resolve' => function () {
         }]);
         $this->assertEquals(2, count($schema->getMutationType()->getFields()));
-
     }
 
     public function testSchemaWithoutClosuresSerializable()
@@ -70,7 +69,7 @@ class SchemaTest extends \PHPUnit_Framework_TestCase
             ],
             'resolveType' => function () use ($authorType) {
                 return $authorType;
-            }
+            },
         ]);
 
         $authorType = new ObjectType([
@@ -78,7 +77,7 @@ class SchemaTest extends \PHPUnit_Framework_TestCase
             'fields'     => [
                 'name' => new StringType(),
             ],
-            'interfaces' => [$userInterface]
+            'interfaces' => [$userInterface],
         ]);
 
         $schema = new Schema([
@@ -89,15 +88,15 @@ class SchemaTest extends \PHPUnit_Framework_TestCase
                         'type'    => $userInterface,
                         'resolve' => function () {
                             return [
-                                'name' => 'Alex'
+                                'name' => 'Alex',
                             ];
-                        }
-                    ]
-                ]
-            ])
+                        },
+                    ],
+                ],
+            ]),
         ]);
         $schema->getTypesList()->addType($authorType);
-        $processor = new Processor($schema);
+        $processor = new Processor(new ExecutionContext($schema));
         $processor->processPayload('{ user { name } }');
         $this->assertEquals(['data' => ['user' => ['name' => 'Alex']]], $processor->getResponseData());
 
@@ -114,29 +113,30 @@ class SchemaTest extends \PHPUnit_Framework_TestCase
         $processor->processPayload('{ user { name { } } }');
         $result = $processor->getResponseData();
 
-        $this->assertEquals(['errors' => [[
-            'message'   => 'Unexpected token "RBRACE"',
-            'locations' => [
-                [
-                    'line'   => 1,
-                    'column' => 19
-                ]
-            ]
-        ]]], $result);
+        $this->assertEquals(['errors' => [
+            [
+                'message'   => 'Unexpected token "RBRACE"',
+                'locations' => [
+                    [
+                        'line'   => 1,
+                        'column' => 19,
+                    ],
+                ],
+            ]]], $result);
         $processor->getExecutionContext()->clearErrors();
 
         $processor->processPayload('{ user { name { invalidSelection } } }');
         $result = $processor->getResponseData();
 
-        $this->assertEquals(['data' => ['user' => null], 'errors' => [[
-            'message'   => 'You can\'t specify fields for scalar type "String"',
-            'locations' => [
-                [
-                    'line'   => 1,
-                    'column' => 10
-                ]
-            ]
-        ]]], $result);
+        $this->assertEquals(['data' => ['user' => null], 'errors' => [
+            [
+                'message'   => 'You can\'t specify fields for scalar type "String"',
+                'locations' => [
+                    [
+                        'line'   => 1,
+                        'column' => 10,
+                    ],
+                ],
+            ]]], $result);
     }
-
 }

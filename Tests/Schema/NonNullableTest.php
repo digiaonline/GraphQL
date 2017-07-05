@@ -7,6 +7,7 @@
 
 namespace Youshido\Tests\Schema;
 
+use Youshido\GraphQL\Execution\Context\ExecutionContext;
 use Youshido\GraphQL\Execution\Processor;
 use Youshido\GraphQL\Schema\Schema;
 use Youshido\GraphQL\Type\ListType\ListType;
@@ -30,10 +31,8 @@ class uid
         return $this->uid;
     }
 }
-
 class NonNullableTest extends \PHPUnit_Framework_TestCase
 {
-
     /**
      * @dataProvider queries
      *
@@ -56,7 +55,7 @@ class NonNullableTest extends \PHPUnit_Framework_TestCase
                         'type'    => new NonNullType(new ListType(new IntType())),
                         'resolve' => function () {
                             return null;
-                        }
+                        },
                     ],
                     'user'                 => [
                         'type'    => new NonNullType(new ObjectType([
@@ -64,44 +63,44 @@ class NonNullableTest extends \PHPUnit_Framework_TestCase
                             'fields' => [
                                 'id'   => new NonNullType(new IdType()),
                                 'name' => new StringType(),
-                            ]
+                            ],
                         ])),
                         'resolve' => function () {
                             return [
                                 'id'   => new uid('6cfb044c-9c0a-4ddd-9ef8-a0b940818db3'),
-                                'name' => 'Alex'
+                                'name' => 'Alex',
                             ];
-                        }
+                        },
                     ],
                     'nonNullListOfNpnNull' => [
                         'type'    => new NonNullType(new ListType(new NonNullType(new IntType()))),
                         'resolve' => function () {
                             return [1, null];
-                        }
+                        },
                     ],
-                    'nonNullArgument'     => [
+                    'nonNullArgument'      => [
                         'args'    => [
-                            'ids' => new NonNullType(new ListType(new IntType()))
+                            'ids' => new NonNullType(new ListType(new IntType())),
                         ],
                         'type'    => new IntType(),
                         'resolve' => function () {
                             return 1;
-                        }
+                        },
                     ],
                     'nonNullArgument2'     => [
                         'args'    => [
-                            'ids' => new NonNullType(new ListType(new NonNullType(new IntType())))
+                            'ids' => new NonNullType(new ListType(new NonNullType(new IntType()))),
                         ],
                         'type'    => new IntType(),
                         'resolve' => function () {
                             return 1;
-                        }
+                        },
                     ],
-                ]
-            ])
+                ],
+            ]),
         ]);
 
-        $processor = new Processor($schema);
+        $processor = new Processor(new ExecutionContext($schema));
         $processor->processPayload($query);
         $result = $processor->getResponseData();
 
@@ -115,71 +114,71 @@ class NonNullableTest extends \PHPUnit_Framework_TestCase
                 '{ test:nonNullArgument2(ids: [1, 2]) }',
                 [
                     'data' => [
-                        'test' => 1
-                    ]
+                        'test' => 1,
+                    ],
                 ],
             ],
             [
                 '{ test:nonNullArgument2(ids: [1, null]) }',
                 [
-                    'data' => [
-                        'test' => null
+                    'data'   => [
+                        'test' => null,
                     ],
                     'errors' => [
                         [
-                            'message' => 'Not valid type for argument "ids" in query "nonNullArgument2": Field must not be NULL',
-                            'locations' => [['line' => 1, 'column' => 25]]
-                        ]
-                    ]
+                            'message'   => 'Not valid type for argument "ids" in query "nonNullArgument2": Field must not be NULL',
+                            'locations' => [['line' => 1, 'column' => 25]],
+                        ],
+                    ],
                 ],
             ],
             [
                 '{ test:nonNullArgument(ids: [1, null]) }',
                 [
                     'data' => [
-                        'test' => 1
-                    ]
-                ]
+                        'test' => 1,
+                    ],
+                ],
             ],
             [
                 '{ test:nonNullArgument }',
                 [
-                    'data' => [
-                        'test' => null
+                    'data'   => [
+                        'test' => null,
                     ],
                     'errors' => [
                         [
-                            'message' => 'Require "ids" arguments to query "nonNullArgument"'
-                        ]
-                    ]
-                ]
+                            'message' => 'Require "ids" arguments to query "nonNullArgument"',
+                        ],
+                    ],
+                ],
             ],
             [
                 '{ nonNullScalar  }',
                 [
                     'data'   => [
-                        'nonNullScalar' => null
+                        'nonNullScalar' => null,
                     ],
                     'errors' => [
                         [
-                            'message' => 'Cannot return null for non-nullable field "nonNullScalar"'
-                        ]
-                    ]
-                ]
+                            'message' => 'Cannot return null for non-nullable field "nonNullScalar"',
+                        ],
+                    ],
+                ],
             ],
 
             [
                 '{ nonNullList  }',
                 [
                     'data'   => [
-                        'nonNullList' => null
+                        'nonNullList' => null,
                     ],
                     'errors' => [
                         [
-                            'message' => 'Cannot return null for non-nullable field "nonNullList"'
-                        ]
-                    ]
-                ]
+                            'message' => 'Cannot return null for non-nullable field "nonNullList"',
+                        ],
+                    ],
+                ],
             ],
             [
                 '{ nonNullListOfNpnNull  }',
@@ -189,10 +188,10 @@ class NonNullableTest extends \PHPUnit_Framework_TestCase
                     ],
                     'errors' => [
                         [
-                            'message' => 'Not valid resolved type for field "nonNullListOfNpnNull": Field must not be NULL'
-                        ]
-                    ]
-                ]
+                            'message' => 'Not valid resolved type for field "nonNullListOfNpnNull": Field must not be NULL',
+                        ],
+                    ],
+                ],
             ],
 
             [
@@ -201,22 +200,21 @@ class NonNullableTest extends \PHPUnit_Framework_TestCase
                     'data' => [
                         'user' => [
                             'id'   => '6cfb044c-9c0a-4ddd-9ef8-a0b940818db3',
-                            'name' => 'Alex'
-                        ]
-                    ]
-                ]
+                            'name' => 'Alex',
+                        ],
+                    ],
+                ],
             ],
             [
                 '{ user { __typename }  }',
                 [
                     'data' => [
                         'user' => [
-                            '__typename' => 'User'
-                        ]
-                    ]
-                ]
-            ]
+                            '__typename' => 'User',
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
-
 }

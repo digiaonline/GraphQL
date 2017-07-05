@@ -9,8 +9,8 @@
 namespace Youshido\Tests\Library\Type;
 
 
+use Youshido\GraphQL\Execution\Context\ExecutionContext;
 use Youshido\GraphQL\Execution\Processor;
-use Youshido\GraphQL\Parser\Ast\ArgumentValue\InputObject;
 use Youshido\GraphQL\Schema\Schema;
 use Youshido\GraphQL\Type\InputObject\InputObjectType;
 use Youshido\GraphQL\Type\ListType\ListType;
@@ -24,14 +24,13 @@ use Youshido\Tests\DataProvider\TestInputObjectType;
 
 class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
 {
-
     public function testInternal()
     {
         $inputObjectType = new InputObjectType([
             'name'   => 'PostData',
             'fields' => [
                 'title' => new NonNullType(new StringType()),
-            ]
+            ],
         ]);
         $this->assertEquals(TypeMap::KIND_INPUT_OBJECT, $inputObjectType->getKind());
         $this->assertEquals('PostData', $inputObjectType->getName());
@@ -49,7 +48,7 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
 
     public function testListOfInputWithNonNull()
     {
-        $processor = new Processor(new Schema([
+        $processor = new Processor(new ExecutionContext(new Schema([
             'query'    => new ObjectType([
                 'name'   => 'RootQuery',
                 'fields' => [
@@ -57,9 +56,9 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
                         'type'    => new StringType(),
                         'resolve' => function () {
                             return null;
-                        }
-                    ]
-                ]
+                        },
+                    ],
+                ],
             ]),
             'mutation' => new ObjectType([
                 'name'   => 'RootMutation',
@@ -70,31 +69,31 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
                                 'name'   => 'PostInputType',
                                 'fields' => [
                                     'title' => new NonNullType(new StringType()),
-                                ]
-                            ]))
+                                ],
+                            ])),
                         ],
                         'type'    => new BooleanType(),
                         'resolve' => function ($object, $args) {
                             return true;
-                        }
-                    ]
-                ]
-            ])
-        ]));
+                        },
+                    ],
+                ],
+            ]),
+        ])));
 
         $processor->processPayload('mutation { createList(posts: [{title: null }, {}]) }');
         $this->assertEquals(
             [
                 'data'   => ['createList' => null],
                 'errors' => [[
-                    'message'   => 'Not valid type for argument "posts" in query "createList": Not valid type for field "title" in input type "PostInputType": Field must not be NULL',
-                    'locations' => [
-                        [
-                            'line'   => 1,
-                            'column' => 23
-                        ]
-                    ]
-                ]]
+                                 'message'   => 'Not valid type for argument "posts" in query "createList": Not valid type for field "title" in input type "PostInputType": Field must not be NULL',
+                                 'locations' => [
+                                     [
+                                         'line'   => 1,
+                                         'column' => 23,
+                                     ],
+                                 ],
+                             ]],
             ],
             $processor->getResponseData()
         );
@@ -102,7 +101,7 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
 
     public function testNullableInputWithNonNull()
     {
-        $processor = new Processor(new Schema([
+        $processor = new Processor(new ExecutionContext(new Schema([
             'query'    => new ObjectType([
                 'name'   => 'RootQuery',
                 'fields' => [
@@ -110,9 +109,9 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
                         'type'    => new StringType(),
                         'resolve' => function () {
                             return null;
-                        }
-                    ]
-                ]
+                        },
+                    ],
+                ],
             ]),
             'mutation' => new ObjectType([
                 'name'   => 'RootMutation',
@@ -123,17 +122,17 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
                                 'name'   => 'AuthorInputType',
                                 'fields' => [
                                     'name' => new NonNullType(new StringType()),
-                                ]
-                            ])
+                                ],
+                            ]),
                         ],
                         'type'    => new BooleanType(),
                         'resolve' => function ($object, $args) {
                             return true;
-                        }
-                    ]
-                ]
-            ])
-        ]));
+                        },
+                    ],
+                ],
+            ]),
+        ])));
         $processor->processPayload('mutation { createAuthor(author: null) }');
         $this->assertEquals(
             [
@@ -145,16 +144,16 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
 
     public function testListInsideInputObject()
     {
-        $processor = new Processor(new Schema([
+        $processor = new Processor(new ExecutionContext(new Schema([
             'query'    => new ObjectType([
                 'name'   => 'RootQueryType',
                 'fields' => [
                     'empty' => [
                         'type'    => new StringType(),
                         'resolve' => function () {
-                        }
+                        },
                     ],
-                ]
+                ],
             ]),
             'mutation' => new ObjectType([
                 'name'   => 'RootMutation',
@@ -169,30 +168,30 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
                                         'name'   => 'postObject',
                                         'fields' => [
                                             'title' => new NonNullType(new StringType()),
-                                        ]
-                                    ]))
-                                ]
-                            ])
+                                        ],
+                                    ])),
+                                ],
+                            ]),
                         ],
                         'resolve' => function () {
                             return 'success message';
-                        }
-                    ]
-                ]
-            ])
-        ]));
+                        },
+                    ],
+                ],
+            ]),
+        ])));
         $processor->processPayload('mutation { createList(topArgument: { postObject:[ { title: null } ] })}');
         $this->assertEquals([
             'data'   => ['createList' => null],
             'errors' => [[
-                'message'   => 'Not valid type for argument "topArgument" in query "createList": Not valid type for field "postObject" in input type "topArgument": Not valid type for field "title" in input type "postObject": Field must not be NULL',
-                'locations' => [
-                    [
-                        'line'   => 1,
-                        'column' => 23
-                    ]
-                ]
-            ]],
+                             'message'   => 'Not valid type for argument "topArgument" in query "createList": Not valid type for field "postObject" in input type "topArgument": Not valid type for field "title" in input type "postObject": Field must not be NULL',
+                             'locations' => [
+                                 [
+                                     'line'   => 1,
+                                     'column' => 23,
+                                 ],
+                             ],
+                         ]],
         ], $processor->getResponseData());
         $processor->getExecutionContext()->clearErrors();
         $processor->processPayload('mutation { createList(topArgument:{
@@ -202,7 +201,7 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
 
     public function testInputObjectDefaultValue()
     {
-        $processor = new Processor(new Schema([
+        $processor = new Processor(new ExecutionContext(new Schema([
             'query' => new ObjectType([
                 'name'   => 'RootQuery',
                 'fields' => [
@@ -215,7 +214,7 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
                                     'fields' => [
                                         'limit'  => new IntType(),
                                         'offset' => new IntType(),
-                                    ]
+                                    ],
                                 ]),
                                 'defaultValue' => [
                                     'limit'  => 10,
@@ -228,19 +227,19 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
                                 'limit is ' . $args['paging']['limit'],
                                 'offset is ' . $args['paging']['offset'],
                             ];
-                        }
+                        },
                     ],
 
-                ]
+                ],
             ]),
-        ]));
+        ])));
         $processor->processPayload('{ cities }');
         $response = $processor->getResponseData();
         $this->assertEquals(
             [
                 'data' => ['cities' => [
                     'limit is 10',
-                    'offset is 0'
+                    'offset is 0',
                 ]],
             ],
             $response
@@ -249,12 +248,12 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
 
     public function testInvalidTypeErrors()
     {
-        $processor = new Processor(new Schema([
-            'query' => new ObjectType([
-                'name' => 'RootQuery',
+        $processor = new Processor(new ExecutionContext(new Schema([
+            'query'    => new ObjectType([
+                'name'   => 'RootQuery',
                 'fields' => [
                     'hello' => new StringType(),
-                ]
+                ],
             ]),
             'mutation' => new ObjectType([
                 'name'   => 'RootMutation',
@@ -267,32 +266,30 @@ class InputObjectTypeTest extends \PHPUnit_Framework_TestCase
                                 'fields' => [
                                     'title'  => new NonNullType(new StringType()),
                                     'userId' => new NonNullType(new IntType()),
-                                ]
+                                ],
                             ]),
                         ],
                         'resolve' => function ($source, $args) {
                             return sprintf('%s by %s', $args['title'], $args['userId']);
-                        }
+                        },
                     ],
 
-                ]
+                ],
             ]),
-        ]));
+        ])));
         $processor->processPayload('mutation { createPost(object: {title: "Hello world"}) }');
         $response = $processor->getResponseData();
         $this->assertEquals(
             [
-                'data' => ['createPost' => null],
+                'data'   => ['createPost' => null],
                 'errors' => [[
-                    'message' => 'Not valid type for argument "object" in query "createPost": userId is required on InputPostType',
-                    'locations' => [
-                        ['line' => 1, 'column' => 23]
-                    ]
-                ]]
+                                 'message'   => 'Not valid type for argument "object" in query "createPost": userId is required on InputPostType',
+                                 'locations' => [
+                                     ['line' => 1, 'column' => 23],
+                                 ],
+                             ]],
             ],
             $response
         );
     }
-
-
 }

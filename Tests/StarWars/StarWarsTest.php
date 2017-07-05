@@ -8,12 +8,12 @@
 namespace Youshido\Tests\StarWars;
 
 
+use Youshido\GraphQL\Execution\Context\ExecutionContext;
 use Youshido\GraphQL\Execution\Processor;
 use Youshido\Tests\StarWars\Schema\StarWarsSchema;
 
 class StarWarsTest extends \PHPUnit_Framework_TestCase
 {
-
     /**
      * @param $query
      * @param $validResult
@@ -23,7 +23,7 @@ class StarWarsTest extends \PHPUnit_Framework_TestCase
      */
     public function testSchema($query, $validResult, $variables)
     {
-        $processor = new Processor(new StarWarsSchema());
+        $processor = new Processor(new ExecutionContext(new StarWarsSchema()));
 
         $processor->processPayload($query, $variables);
 
@@ -33,7 +33,7 @@ class StarWarsTest extends \PHPUnit_Framework_TestCase
 
     public function testInvalidVariableType()
     {
-        $processor = new Processor(new StarWarsSchema());
+        $processor = new Processor(new ExecutionContext(new StarWarsSchema()));
 
         $processor->processPayload(
             'query($someId: Int){
@@ -52,14 +52,13 @@ class StarWarsTest extends \PHPUnit_Framework_TestCase
                     'locations' => [
                         [
                             'line'   => 1,
-                            'column' => 7
-                        ]
-                    ]
-                ]
-            ]
+                            'column' => 7,
+                        ],
+                    ],
+                ],
+            ],
         ]);
     }
-
 
     public function dataProvider()
     {
@@ -75,11 +74,11 @@ class StarWarsTest extends \PHPUnit_Framework_TestCase
                     'data' => [
                         'hero' => [
                             '__typename' => 'Human',
-                            'name'       => 'Luke Skywalker'
+                            'name'       => 'Luke Skywalker',
                         ],
-                    ]
+                    ],
                 ],
-                []
+                [],
             ],
             [
                 'query {
@@ -89,10 +88,10 @@ class StarWarsTest extends \PHPUnit_Framework_TestCase
               }',
                 ['data' => [
                     'hero' => [
-                        'name' => 'R2-D2'
-                    ]
+                        'name' => 'R2-D2',
+                    ],
                 ]],
-                []
+                [],
             ],
             [
                 'query {
@@ -118,10 +117,10 @@ class StarWarsTest extends \PHPUnit_Framework_TestCase
                             [
                                 'name' => 'Leia Organa',
                             ],
-                        ]
-                    ]
+                        ],
+                    ],
                 ]],
-                []
+                [],
             ],
             [
                 '{
@@ -158,7 +157,7 @@ class StarWarsTest extends \PHPUnit_Framework_TestCase
                                         ['name' => 'Luke Skywalker',],
                                         ['name' => 'Leia Organa'],
                                         ['name' => 'R2-D2',],
-                                    ]
+                                    ],
                                 ],
                                 [
                                     'name'      => 'Leia Organa',
@@ -172,10 +171,10 @@ class StarWarsTest extends \PHPUnit_Framework_TestCase
                                         ],
                                 ],
                             ],
-                        ]
-                    ]
+                        ],
+                    ],
                 ],
-                []
+                [],
             ],
             [
                 '{
@@ -186,11 +185,11 @@ class StarWarsTest extends \PHPUnit_Framework_TestCase
                 [
                     'data' => [
                         'human' => [
-                            'name' => 'Luke Skywalker'
-                        ]
-                    ]
+                            'name' => 'Luke Skywalker',
+                        ],
+                    ],
                 ],
-                []
+                [],
             ],
             [
                 'query($someId: ID){
@@ -201,14 +200,14 @@ class StarWarsTest extends \PHPUnit_Framework_TestCase
                 [
                     'data' => [
                         'human' => [
-                            'name' => 'Luke Skywalker'
-                        ]
-                    ]
+                            'name' => 'Luke Skywalker',
+                        ],
+                    ],
                 ],
                 [
-                    'someId' => '1000'
-                ]
-            ]
+                    'someId' => '1000',
+                ],
+            ],
         ];
     }
 }
