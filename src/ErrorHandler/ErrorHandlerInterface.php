@@ -13,12 +13,12 @@ use Youshido\GraphQL\Execution\Context\ExecutionContextInterface;
 interface ErrorHandlerInterface
 {
     /**
-     * @param                           $error
+     * @param \Exception                $error
      * @param ExecutionContextInterface $executionContext
      *
      * @return mixed
      */
-    public function handle($error, ExecutionContextInterface $executionContext);
+    public function handle(\Exception $error, ExecutionContextInterface $executionContext);
 
     public function isFinalHandler($error);
 }

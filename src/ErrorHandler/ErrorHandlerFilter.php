@@ -36,7 +36,7 @@ class ErrorHandlerFilter extends AbstractErrorHandler
         $this->filterFn     = $filterFn;
     }
 
-    public function handle($error, ExecutionContextInterface $executionContext)
+    public function handle(\Exception $error, ExecutionContextInterface $executionContext)
     {
         $fn = $this->filterFn;
         if ($fn($error, $executionContext)) {
