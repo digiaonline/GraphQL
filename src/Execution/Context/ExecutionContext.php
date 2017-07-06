@@ -138,7 +138,8 @@ class ExecutionContext implements ExecutionContextInterface
     public function handleError(\Exception $e)
     {
         foreach ($this->errorHandlers as $handler) {
-            if (!$handler->handle($e, $this)) {
+            $handler->handle($e, $this);
+            if ($handler->isFinalHandler($e)) {
                 return $this;
             }
         }

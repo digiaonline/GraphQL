@@ -19,4 +19,6 @@ interface ErrorHandlerInterface
      * @return mixed
      */
     public function handle($error, ExecutionContextInterface $executionContext);
+
+    public function isFinalHandler($error);
 }

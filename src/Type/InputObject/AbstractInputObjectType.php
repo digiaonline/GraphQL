@@ -25,6 +25,8 @@ abstract class AbstractInputObjectType extends AbstractType
 
     protected $isBuilt = false;
 
+    protected $lastValidationError = null;
+
     public function getConfig()
     {
         if (!$this->isBuilt) {
@@ -79,6 +81,7 @@ abstract class AbstractInputObjectType extends AbstractType
             if (!$field->getType()->isValidValue($valueItem)) {
                 $error                     = $field->getType()->getValidationError($valueItem) ?: '(no details available)';
                 $this->lastValidationError = sprintf('Not valid type for field "%s" in input type "%s": %s', $field->getName(), $this->getName(), $error);
+
                 return false;
             }
 
@@ -106,7 +109,7 @@ abstract class AbstractInputObjectType extends AbstractType
     public function parseValue($value)
     {
         if (is_null($value)) return null;
-        if($value instanceof InputObject) {
+        if ($value instanceof InputObject) {
             $value = $value->getValue();
         }
 
@@ -124,5 +127,14 @@ abstract class AbstractInputObjectType extends AbstractType
 
         return $value;
     }
+
+    public function getValidationError($value = null)
+    {
+        $result                    = $this->lastValidationError;
+        $this->lastValidationError = null;
+        
+        return $result;
+    }
+
 
 }

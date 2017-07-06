@@ -11,7 +11,7 @@ namespace Youshido\GraphQL\ErrorHandler;
 
 use Youshido\GraphQL\Execution\Context\ExecutionContextInterface;
 
-class ErrorHandlerFilter implements ErrorHandlerInterface
+class ErrorHandlerFilter extends AbstractErrorHandler
 {
     /** @var callable */
     private $filterFn;
