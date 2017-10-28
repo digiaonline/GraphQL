@@ -7,7 +7,8 @@
 
 namespace Youshido\GraphQL\Execution;
 
-use Youshido\GraphQL\Exception\Parser\InvalidRequestException;
+
+use Youshido\GraphQL\Parser\Ast\ArgumentValue\Literal;
 use Youshido\GraphQL\Parser\Ast\ArgumentValue\Variable;
 use Youshido\GraphQL\Parser\Ast\ArgumentValue\VariableReference;
 use Youshido\GraphQL\Parser\Ast\Fragment;
@@ -62,18 +63,6 @@ class Request
         }
 
         if (array_key_exists('variableReferences', $data)) {
-            foreach ($data['variableReferences'] as $ref) {
-                if (!array_key_exists($ref->getName(), $variables)) {
-                    /** @var Variable $variable */
-                    $variable = $ref->getVariable();
-                    if ($variable->hasDefaultValue()) {
-                        $variables[$variable->getName()] = $variable->getDefaultValue()->getValue();
-                        continue;
-                    }
-                    throw new InvalidRequestException(sprintf("Variable %s hasn't been submitted", $ref->getName()), $ref->getLocation());
-                }
-            }
-
             $this->addVariableReferences($data['variableReferences']);
         }
 
@@ -219,7 +208,7 @@ class Request
         }
 
         $this->variables = $variables;
-        foreach ($this->variableReferences as $reference) {
+        foreach($this->variableReferences as $reference) {
             /** invalid request with no variable */
             if (!$reference->getVariable()) continue;
             $variableName = $reference->getVariable()->getName();
